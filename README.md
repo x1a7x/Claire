@@ -1,201 +1,145 @@
+# My Imageboard
 
-
-
-# my Claire fork: README
-
+**Version**: PHP 8.4.1 and Above  
+**Author**: [Your Name]
 
 ## Table of Contents
+
 1. [Introduction](#introduction)
-2. [Features](#features)
-3. [Installation Requirements](#installation-requirements)
-4. [Setup Instructions](#setup-instructions)
-5. [Detailed Explanation of Code Features](#detailed-explanation-of-code-features)
-    - [Session Management](#session-management)
-    - [Database Handling](#database-handling)
-    - [Input Validation and CSRF Protection](#input-validation-and-csrf-protection)
-    - [File Upload Handling](#file-upload-handling)
-    - [Main Board vs. Thread View](#main-board-vs-thread-view)
-    - [Pagination and Navigation](#pagination-and-navigation)
-6. [Security Considerations](#security-considerations)
-7. [Future Improvements](#future-improvements)
-8. [License](#license)
+2. [System Requirements](#system-requirements)
+3. [How the App Works](#how-the-app-works)
+4. [Features](#features)
+5. [Installation Instructions](#installation-instructions)
+6. [Usage Guide](#usage-guide)
+7. [Security Measures](#security-measures)
+8. [Known Issues & Limitations](#known-issues-limitations)
 
 ## Introduction
-The **Claire fork** is a simple online discussion platform that allows users to create threads, reply to threads, and share media such as images or videos related to chess discussions. The application is built in PHP and SQLite for simplicity, and it includes key security measures to ensure safe and effective user interactions.
+
+This application is an imageboard, inspired by popular community boards where users can post images and messages either as original posts or as replies. It is designed for PHP 8.4.1 and above, incorporating modern PHP standards and security best practices to provide a safe, user-friendly platform for public or private boards.
+
+## System Requirements
+
+- **PHP**: Version 8.4.1 or higher is required. The application uses modern PHP syntax and functions that are compatible only with the latest versions.
+- **Web Server**: Apache or Nginx recommended.
+- **SQLite**: For database storage.
+- **FFmpeg and ImageMagick**: Required for handling video thumbnails and image manipulation.
+- **File Permissions**: The application requires appropriate permissions for the database (`/db` folder) to be writable.
+
+## How the App Works
+
+This imageboard application is built to allow users to create threads, post messages, and optionally upload media files like images and videos. Here is a detailed explanation of how each part of the application works:
+
+### 1. **Posting a New Thread or Reply**
+   - Users can initiate new threads or reply to existing threads by filling out a form that accepts text messages and optional media uploads.
+   - Media uploads can be images (`jpg`, `jpeg`, `png`, `gif`) or videos (`mp4`, `webm`), with a maximum size limit of 20 MB.
+   - Threads and replies are saved in an SQLite database (`database.db`), and each post is timestamped.
+
+### 2. **CSRF Protection**
+   - CSRF (Cross-Site Request Forgery) tokens are utilized to ensure that all form submissions originate from trusted sources, thereby mitigating CSRF attacks.
+
+### 3. **Media Handling**
+   - Uploaded images and videos are handled based on their MIME type.
+   - Images have thumbnails generated using **ImageMagick**, while **FFmpeg** is used for extracting video thumbnails.
+   - Videos are embedded inline using HTML5 video tags, allowing direct playback within the application.
+
+### 4. **Pagination and Thread Management**
+   - Threads are paginated to prevent overwhelming the UI, with the default setting of displaying 10 threads per page.
+   - Replies are loaded in a threaded format to ensure clarity and context.
+
+### 5. **Form Submission and Feedback**
+   - After posting, users are redirected either back to the main board or the respective thread.
+   - A detailed form is used for posting, with a "Post" button positioned at the bottom right for better usability.
 
 ## Features
-- **Thread Creation and Replies**: Users can create new threads or reply to existing ones.
-- **File Uploads**: Users can attach images and videos to their posts.
-- **CSRF Protection**: Utilizes CSRF tokens to prevent cross-site request forgery attacks.
-- **Input Validation and Sanitization**: Helps maintain data integrity and prevents security threats.
-- **Pagination**: Threads are paginated to make navigation easier.
-- **Server-Side Error Logging**: Error handling is performed via logging to a designated file.
 
-## Installation Requirements
-- PHP 8.4.1 or higher.
-- SQLite3 extension enabled.
-- ImageMagick and FFmpeg installed (for validating image and video files).
-- A web server like Apache or Nginx.
+- **Threaded Discussions**: Users can start threads and reply to existing threads.
+- **Image and Video Uploads**: Users can upload images or videos up to 20 MB.
+- **Thumbnail Generation**: Images and videos have thumbnails generated for easy browsing.
+- **Pagination**: Threads are paginated to maintain a clean and user-friendly interface.
+- **CSRF Protection**: Prevent unauthorized requests from compromising data.
+- **Input Sanitization**: All user inputs are sanitized to prevent XSS (Cross-Site Scripting).
+- **Session Security**: Secure session management, including prevention against session fixation.
 
-## Setup Instructions
-1. **Clone the Repository**: Clone the project repository to your web server directory.
+## Installation Instructions
+
+Follow these steps to set up the imageboard application:
+
+1. **Clone the Repository**: Clone the repository to your web server's root directory.
    ```bash
-   git clone <repository-url>
+   git clone [repository URL] /path/to/webserver
    ```
-2. **Check PHP Dependencies**: Ensure the PHP SQLite extension, ImageMagick, and FFmpeg are installed and configured.
-3. **Create Database**: The SQLite database (`imageboard.db`) will be created automatically upon first use. Ensure your server has permission to read and write to the directory.
-4. **Ensure Permissions**: Make sure the web server has write permissions to the following directories:
-   - `uploads/` for storing media files.
-   - `error.txt` for logging errors.
 
-## Detailed Explanation of Code Features
+2. **Set Permissions**: Ensure the `/db` directory has the correct permissions.
+   ```bash
+   mkdir db
+   chmod 0777 db
+   ```
 
-### Session Management
-- **Session Handling**: The script begins by starting the session using `session_start()`. This enables the server to track user activity, which is crucial for managing CSRF tokens and other user-specific data.
-- **Session Regeneration**: To prevent session fixation attacks, the session ID is regenerated each time (`session_regenerate_id(true)`).
-- **CSRF Token Generation**: A CSRF token (`$_SESSION['token']`) is generated to prevent malicious requests. This token is stored in the user's session and verified whenever a form is submitted.
+3. **Install Dependencies**:
+   - **FFmpeg** and **ImageMagick** must be installed for handling videos and images respectively.
+   ```bash
+   sudo apt-get install ffmpeg imagemagick
+   ```
 
-### Database Handling
-- **Database Connection**: The project uses SQLite3 as its database. The connection is wrapped in a `try-catch` block to handle any connection errors gracefully.
-  ```php
-  try {
-      $db = new SQLite3('imageboard.db', SQLITE3_OPEN_CREATE | SQLITE3_OPEN_READWRITE);
-  } catch (Exception $e) {
-      error_log("Database connection failed: " . $e->getMessage());
-      die("Database connection failed.");
-  }
-  ```
-- **Table Creation**: If the `posts` table does not exist, it is created automatically when the script runs.
-  ```sql
-  CREATE TABLE IF NOT EXISTS posts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      parent_id INTEGER,
-      name TEXT NOT NULL,
-      message TEXT NOT NULL,
-      file TEXT,
-      file_type TEXT,
-      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(parent_id) REFERENCES posts(id) ON DELETE CASCADE
-  );
-  ```
-- **Post Insertion**: User posts are inserted into the database using a prepared statement to prevent SQL injection.
+4. **Configure Your Web Server**: Ensure that your server is configured to support PHP 8.4.1 or above.
+   - For **Apache**, you may need to enable the PHP module:
+   ```bash
+   sudo a2enmod php8.4
+   ```
 
-### Input Validation and CSRF Protection
-- **Input Validation**: Before processing a post, the script validates whether the message or file input is provided. If both fields are empty, an error is thrown.
-- **CSRF Token Verification**: Every form submission is checked for a valid CSRF token to ensure it came from an authorized user.
-  ```php
-  if (!hash_equals($_SESSION['token'], $_POST['token'] ?? '')) {
-      error_log("Invalid CSRF token");
-      die("Invalid CSRF token");
-  }
-  ```
-- **HTML Escaping**: User inputs are sanitized using `htmlspecialchars()` to prevent Cross-Site Scripting (XSS).
+5. **Start the Server**: Start your Apache or Nginx server and navigate to the root URL of your installation.
 
-### File Upload Handling
-- **File Upload Directory**: Uploaded files are stored in the `uploads/` directory. If the directory does not exist, it is created dynamically.
-- **Supported File Types**: Only certain file types (`jpg`, `jpeg`, `png`, `gif`, `webp`, `mp4`) are allowed, and they are validated both by extension and MIME type.
-- **Image and Video Validation**: Image files are validated using ImageMagick (`identify`), while videos are validated using FFmpeg (`ffmpeg`). This ensures uploaded media is not corrupted or malicious.
-  ```php
-  $image_check = @exec("identify " . escapeshellarg($tmp_name) . " 2>&1", $output, $return_var);
-  ```
-- **File Size Restriction**: The maximum allowed file size is 20MB. If this limit is exceeded, an error is returned.
+## Usage Guide
 
-### Main Board vs. Thread View
-- **Main Board View**: Displays a list of all threads, showing the original post and the number of replies. Users can navigate between threads and pages.
-- **Thread View**: Displays the original post and all associated replies. Users can post replies directly to a thread from this page.
-- **Form Handling**: There are two different forms—one for creating a new thread and one for replying to an existing thread. Both forms validate CSRF tokens and include file upload options.
+- **Creating a Thread**: On the main page, fill in the "Message" field to start a new thread. Optionally, attach an image or video.
+- **Replying to a Thread**: Navigate to an existing thread and fill in the "Reply" field to add your response.
+- **Pagination**: Use the pagination links at the bottom of the page to navigate through threads.
 
-### Pagination and Navigation
-- **Pagination**: The main board view implements pagination to improve user experience. The number of threads displayed per page is set to 10 (`$posts_per_page = 10`). The current page is managed using a `GET` parameter.
-- **Navigation Links**: Navigation links (`[Return]` and `[Home]`) help users easily move between the thread view and the main page.
-  ```php
-  <a href="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">[Return]</a>
-  ```
+### Forms and Fields
+- **Message/Reply**: Text area for users to post their content. This field is required.
+- **File Upload**: Optional file input for uploading images or videos. Supported formats include `jpg`, `jpeg`, `png`, `gif`, `mp4`, and `webm`.
 
-## Security Considerations
-- **CSRF Protection**: Forms are protected using CSRF tokens to prevent unauthorized submissions from third parties.
-- **Input Validation and Sanitization**: User inputs are validated and sanitized using `htmlspecialchars()` to mitigate XSS attacks.
-- **File Validation**: Uploaded files are checked for MIME type and integrity using external tools like ImageMagick and FFmpeg.
-- **Session Management**: Session IDs are regenerated after each request to prevent session fixation attacks.
-- **SQL Injection Prevention**: Database interactions use prepared statements to ensure that user input does not result in SQL injection vulnerabilities.
+## Security Measures
 
-## Future Improvements
-1. **User Authentication**: Implement a simple user authentication system to differentiate between registered users and guests.
-2. **Rate Limiting**: Add rate limiting to prevent spam or denial of service by restricting the number of posts allowed per IP address in a given timeframe.
-3. **Enhanced UI**: Improve the user interface and styling to make the board more visually appealing and user-friendly.
-4. **Search Feature**: Add a search feature to enable users to find threads or posts by keywords.
-5. **Rich Text Editor**: Introduce a rich text editor for formatting posts, making it easier for users to share information effectively.
+This application incorporates several modern security measures to ensure data integrity and protect user information:
 
-## License
-This project is licensed under the MIT License. You are free to use, modify, and distribute this software as long as you include the original copyright notice.
+### 1. **CSRF Protection**
+   - All forms include a hidden input containing a CSRF token, which is validated upon submission to prevent CSRF attacks. The CSRF token is stored in the user's session and must match the token submitted with the form.
 
----
+### 2. **Session Security**
+   - **HttpOnly** and **Secure** flags are set on session cookies to prevent JavaScript access and ensure secure transmission over HTTPS.
+   - **SameSite** attribute is set to `Strict` to mitigate CSRF attacks by restricting how cookies are sent along with cross-site requests.
+   - **Session Regeneration**: Sessions are regenerated upon important events to prevent session fixation attacks.
 
+### 3. **Input Sanitization**
+   - User input is sanitized using `htmlspecialchars()` to prevent XSS attacks. This function escapes special characters like `<` and `>`, rendering any potential script harmless.
 
+### 4. **File Upload Security**
+   - Only specific file types are allowed (`jpg`, `jpeg`, `png`, `gif`, `webm`, `mp4`).
+   - MIME type validation is used to ensure files match expected formats.
+   - Filenames are randomized using `random_bytes()` to avoid directory traversal attacks or overwriting existing files.
+   - The **ImageMagick** and **FFmpeg** tools are used securely, with commands executed using `escapeshellcmd()` to prevent command injection.
+   - File permissions are restricted to `0644` after upload to prevent unauthorized modification.
 
-This application is a simple yet powerful imageboard designed specifically for chess discussions. It allows users to create threads, post messages, and share images or videos (specifically mp4 files) related to chess. The application is built with security and user experience in mind, making it suitable for deployment on a production chess discussion site.
+### 5. **Database Security**
+   - SQLite is used to store posts. Prepared statements are used throughout to prevent SQL injection.
 
-The imageboard is developed using PHP and SQLite, ensuring a lightweight and efficient setup. It uses a single index.php file for all its functionalities, making it easy to deploy and manage. The design focuses on simplicity and responsiveness, providing a seamless experience across both desktop and mobile devices.
+### 6. **Clickjacking Protection**
+   - The `X-Frame-Options: DENY` header is set to prevent the site from being embedded in iframes, mitigating clickjacking attacks.
 
-Installation and Setup
+### 7. **Error Handling**
+   - Errors are logged to a file (`error.log`) instead of being displayed to users. This prevents potential information leakage about the server's structure.
 
-To get started with the imageboard, you need a server running Ubuntu 24.04 or a similar Linux distribution. Ensure that you have PHP installed with the necessary extensions, including SQLite support. You will also need to install ImageMagick and FFmpeg, which are required for validating and processing uploaded images and videos. These can be installed using the apt package manager with the commands sudo apt install imagemagick and sudo apt install ffmpeg.
+## Known Issues & Limitations
 
-Place the index.php and style.css files in your web server's document root or the desired directory where you want the imageboard to reside. Create an index.html file at the root of your website to serve as a welcome page, listing the different boards or providing introductory information about your site.
+- **Single User Authentication**: This application currently lacks user authentication. Adding user accounts and permissions would improve its utility for private boards.
+- **Limited Scalability**: Since SQLite is used, this application is ideal for small to medium communities. Scaling to thousands of users may require transitioning to a more robust DBMS like MySQL or PostgreSQL.
+- **No Rate Limiting**: Currently, there is no mechanism to prevent spam. Adding rate limiting or CAPTCHA is recommended for production use.
 
-Ensure that the uploads/ directory exists and is writable by the web server. The application uses this directory to store uploaded files securely. If the directory does not exist, the script will attempt to create it with the appropriate permissions.
+## Conclusion
 
-Configuration
+This imageboard application is designed to provide a straightforward, easy-to-use platform for creating and responding to threads. It leverages modern PHP (version 8.4.1 and above) and includes several essential security features to ensure a safe user experience.
 
-Open the index.php file to adjust configuration settings as needed. At the top of the file, you'll find a $board_title variable, which you can set to your desired board name, such as 'Chess Discussion Board'. This title will appear on the main page and reply pages, providing a consistent branding for your imageboard.
-
-Adjust your PHP configuration (php.ini) to ensure that it allows file uploads up to 20MB, matching your desired maximum file size for uploads. Set upload_max_filesize and post_max_size to at least 20M. Restart your web server after making changes to the PHP configuration to apply the new settings.
-
-In your Nginx configuration, set the client_max_body_size directive to 20M within your server block. This setting prevents users from uploading files larger than 20MB, providing an initial layer of protection against oversized uploads. Reload Nginx to apply the changes after modifying the configuration.
-
-Usage
-
-Users can access the imageboard by navigating to the URL where you've placed the index.php file. On the main board page, users can create new threads by posting messages and optionally uploading images or mp4 videos. The simplified posting form includes a resizable message textarea and a file upload field, making it straightforward for users to contribute content.
-
-Each thread displays the name "Anonymous" on the top-left and a reply button with a reply count on the top-right. Uploaded images and videos are displayed centered under the header, followed by the message text. Users can click on the reply button to view the thread in reply mode, where they can see all replies in chronological order and post their own replies using the same simplified form.
-
-The application enforces a maximum upload size of 20MB for both images and videos. If a user attempts to upload a file exceeding this limit, the application displays an error message informing them that the file size exceeds the allowed limit. This ensures that the server's resources are protected and that users are aware of the upload restrictions.
-
-Security Considerations
-
-The application incorporates several security measures to ensure safe operation in a production environment. It uses CSRF tokens in forms to protect against cross-site request forgery attacks and sanitizes all user inputs using htmlspecialchars() to prevent cross-site scripting (XSS) attacks. Prepared statements are employed for database interactions to safeguard against SQL injection.
-
-File uploads are handled with care, using both ImageMagick and FFmpeg to validate and process images and videos securely. These tools check for corrupted or malicious files, ensuring that only valid images and mp4 videos are accepted. The application restricts file types to jpg, jpeg, png, gif, webp, and mp4, explicitly excluding unsafe file types such as svg or executable files.
-
-The uploads/ directory stores files with unique filenames, preventing overwriting and obscuring original filenames. It's important to configure your web server to prevent script execution in the uploads directory, adding an extra layer of security. Serving the site over HTTPS using SSL/TLS certificates, such as those provided by Let's Encrypt, is recommended to encrypt data transmission and enhance security.
-
-Final Thoughts
-
-This imageboard application offers a robust platform for chess enthusiasts to discuss and share content related to chess. Its simplicity and focus on security make it an excellent choice for deployment on a production chess discussion site. By following the installation and configuration instructions, and paying close attention to the security considerations, you can provide users with a safe and enjoyable experience.
-
-Regularly monitor and update your server and application to protect against new vulnerabilities. Keep your software dependencies up to date, and consider implementing additional security measures as needed. By maintaining vigilance and adhering to best practices, you can ensure that your chess discussion imageboard remains a valuable and secure resource for your community.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Should you have any questions or need further customization, feel free to reach out or contribute to the repository!
 
