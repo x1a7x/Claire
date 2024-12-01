@@ -1,3 +1,10 @@
+
+
+
+
+This is a total, 100 percent overhaul of Claire- from scratch. 
+
+
 This application is a simple yet powerful imageboard designed specifically for chess discussions. It allows users to create threads, post messages, and share images or videos (specifically mp4 files) related to chess. The application is built with security and user experience in mind, making it suitable for deployment on a production chess discussion site.
 
 The imageboard is developed using PHP and SQLite, ensuring a lightweight and efficient setup. It uses a single index.php file for all its functionalities, making it easy to deploy and manage. The design focuses on simplicity and responsiveness, providing a seamless experience across both desktop and mobile devices.
