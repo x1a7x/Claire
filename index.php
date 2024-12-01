@@ -1,6 +1,16 @@
 <?php
 session_start();
 
+// Enable error logging to 'error.txt'
+ini_set('log_errors', 'On');
+ini_set('error_log', 'error.txt');
+error_reporting(E_ALL);
+
+// Ensure 'error.txt' exists
+if (!file_exists('error.txt')) {
+    file_put_contents('error.txt', '');
+}
+
 // Regenerate session ID to prevent session fixation
 session_regenerate_id(true);
 
@@ -16,7 +26,8 @@ if (empty($_SESSION['token'])) {
 try {
     $db = new SQLite3('imageboard.db', SQLITE3_OPEN_CREATE | SQLITE3_OPEN_READWRITE);
 } catch (Exception $e) {
-    die("Database connection failed: " . htmlspecialchars($e->getMessage()));
+    error_log("Database connection failed: " . $e->getMessage());
+    die("Database connection failed.");
 }
 
 // Create table if it doesn't exist
@@ -35,6 +46,7 @@ $db->exec("CREATE TABLE IF NOT EXISTS posts (
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF token validation
     if (!hash_equals($_SESSION['token'], $_POST['token'] ?? '')) {
+        error_log("Invalid CSRF token");
         die("Invalid CSRF token");
     }
 
@@ -68,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validate file extension
             if (!in_array($file_ext, $allowed_ext)) {
                 $error = "Invalid file type.";
+                error_log($error);
             } else {
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
                 $mime_type = $finfo->file($tmp_name);
@@ -76,11 +89,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                     if (!in_array($mime_type, $allowed_image_types)) {
                         $error = "Invalid image file type.";
+                        error_log($error);
                     } else {
                         // Use ImageMagick to validate the image
-                        $image_check = exec("identify " . escapeshellarg($tmp_name) . " 2>&1", $output, $return_var);
+                        $image_check = @exec("identify " . escapeshellarg($tmp_name) . " 2>&1", $output, $return_var);
                         if ($return_var !== 0) {
                             $error = "Corrupted or invalid image file.";
+                            error_log($error . " Output: " . implode("\n", $output));
                         } else {
                             $file_type = 'image';
                         }
@@ -90,11 +105,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 elseif ($file_ext === 'mp4') {
                     if (!in_array($mime_type, $allowed_video_types)) {
                         $error = "Invalid video file type.";
+                        error_log($error);
                     } else {
                         // Use FFmpeg to validate the video
-                        $video_check = exec("ffmpeg -v error -i " . escapeshellarg($tmp_name) . " -f null - 2>&1", $output, $return_var);
+                        $video_check = @exec("ffmpeg -v error -i " . escapeshellarg($tmp_name) . " -f null - 2>&1", $output, $return_var);
                         if ($return_var !== 0) {
                             $error = "Corrupted or invalid video file.";
+                            error_log($error . " Output: " . implode("\n", $output));
                         } else {
                             $file_type = 'video';
                         }
@@ -102,10 +119,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // **Updated File Size Limit (20MB for both images and videos)**
+            // File Size Limit (20MB for both images and videos)
             $max_size = 20 * 1024 * 1024; // 20MB in bytes
             if ($file_size > $max_size) {
                 $error = "File size exceeds the allowed limit of 20MB.";
+                error_log($error);
             }
 
             if (empty($error)) {
@@ -113,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $target_file = $uploads_dir . '/' . $unique_id . '.' . $file_ext;
                 if (!move_uploaded_file($tmp_name, $target_file)) {
                     $error = "Failed to upload file.";
+                    error_log($error);
                 } else {
                     $file = $target_file;
                 }
@@ -127,15 +146,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindValue(':message', htmlspecialchars($message), SQLITE3_TEXT);
             $stmt->bindValue(':file', $file, SQLITE3_TEXT);
             $stmt->bindValue(':file_type', $file_type, SQLITE3_TEXT);
-            $stmt->execute();
+            $result = $stmt->execute();
 
-            // Redirect to prevent form resubmission
-            if ($parent_id) {
-                header("Location: {$_SERVER['PHP_SELF']}?thread=$parent_id");
+            if (!$result) {
+                $error = "Failed to insert post into database.";
+                error_log($error . " Error Info: " . $db->lastErrorMsg());
             } else {
-                header("Location: {$_SERVER['PHP_SELF']}");
+                // Redirect to prevent form resubmission
+                if ($parent_id) {
+                    header("Location: {$_SERVER['PHP_SELF']}?thread=$parent_id");
+                } else {
+                    header("Location: {$_SERVER['PHP_SELF']}");
+                }
+                exit();
             }
-            exit();
         }
     }
 }
@@ -147,9 +171,15 @@ if (isset($_GET['thread'])) {
     // Fetch the thread
     $stmt = $db->prepare("SELECT * FROM posts WHERE id = :id AND parent_id IS NULL");
     $stmt->bindValue(':id', $thread_id, SQLITE3_INTEGER);
-    $thread = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+    $result = $stmt->execute();
+    if (!$result) {
+        error_log("Failed to fetch thread. Error Info: " . $db->lastErrorMsg());
+        die("Thread not found.");
+    }
+    $thread = $result->fetchArray(SQLITE3_ASSOC);
 
     if (!$thread) {
+        error_log("Thread with ID $thread_id not found.");
         die("Thread not found.");
     }
 
@@ -172,8 +202,16 @@ if (isset($_GET['thread'])) {
     $current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
     $offset = ($current_page - 1) * $posts_per_page;
 
-    // Fetch threads
-    $stmt = $db->prepare("SELECT * FROM posts WHERE parent_id IS NULL ORDER BY timestamp DESC LIMIT :limit OFFSET :offset");
+    // Fetch threads ordered by latest activity (thread creation or latest reply)
+    $stmt = $db->prepare("
+        SELECT p.*, (
+            SELECT MAX(timestamp) FROM posts WHERE id = p.id OR parent_id = p.id
+        ) AS last_activity
+        FROM posts p
+        WHERE p.parent_id IS NULL
+        ORDER BY last_activity DESC
+        LIMIT :limit OFFSET :offset
+    ");
     $stmt->bindValue(':limit', $posts_per_page, SQLITE3_INTEGER);
     $stmt->bindValue(':offset', $offset, SQLITE3_INTEGER);
     $threads = $stmt->execute();
@@ -334,3 +372,4 @@ if (isset($_GET['thread'])) {
 
 </body>
 </html>
+
