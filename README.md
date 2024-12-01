@@ -1,6 +1,6 @@
 # Claire modernized! PHP 8.4.1   version 001
 
-This is a fork of https://github.com/ClaireIsAlive/Claire the original is over 9 years old. AI got good enough where one can feed the whole claire code to it and get it running. Times have changed tho, and some features that shined9 years ago are no longer viable. In this fork i eliminated over 2/3 of the code base, and added lots of modern security features.
+This is a fork of https://github.com/ClaireIsAlive/Claire the original is over 9 years old. AI got good enough where one can feed the whole claire code to it and get it running. Times have changed tho, and some features that shined 9 years ago are no longer viable. In this fork i eliminated over 2/3 of the code base, and added lots of modern security features.
 
 **Version**: PHP 8.4.1 and Above  
 **Author**: [chatgpt]
