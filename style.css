@@ -94,6 +94,8 @@ h1 {
     margin: 20px auto;
     width: 95%;
     max-width: 800px;
+    word-wrap: break-word; /* Ensures long words are wrapped */
+    overflow-wrap: break-word; /* Ensures long strings do not overflow */
     border-radius: 4px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
