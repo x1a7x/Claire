@@ -3,7 +3,6 @@
 
 # my Claire fork: README
 
-This README file serves as a comprehensive guide to the Chess Discussion Board PHP project. It aims to explain the project's architecture, features, technologies, and how to use it effectively.
 
 ## Table of Contents
 1. [Introduction](#introduction)
