@@ -2,7 +2,7 @@
 
 
 
-This is a total, 100 percent overhaul of Claire- from scratch. 
+This is a total, 100 percent overhaul of Claire. 
 
 
 This application is a simple yet powerful imageboard designed specifically for chess discussions. It allows users to create threads, post messages, and share images or videos (specifically mp4 files) related to chess. The application is built with security and user experience in mind, making it suitable for deployment on a production chess discussion site.
