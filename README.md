@@ -32,7 +32,7 @@ The **Claire fork** is a simple online discussion platform that allows users to 
 - **Server-Side Error Logging**: Error handling is performed via logging to a designated file.
 
 ## Installation Requirements
-- PHP 7.4 or higher.
+- PHP 8.4.1 or higher.
 - SQLite3 extension enabled.
 - ImageMagick and FFmpeg installed (for validating image and video files).
 - A web server like Apache or Nginx.
