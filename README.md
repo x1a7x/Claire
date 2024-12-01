@@ -21,7 +21,7 @@
 8. [License](#license)
 
 ## Introduction
-The **Chess Discussion Board** is a simple online discussion platform that allows users to create threads, reply to threads, and share media such as images or videos related to chess discussions. The application is built in PHP and SQLite for simplicity, and it includes key security measures to ensure safe and effective user interactions.
+The **Claire fork** is a simple online discussion platform that allows users to create threads, reply to threads, and share media such as images or videos related to chess discussions. The application is built in PHP and SQLite for simplicity, and it includes key security measures to ensure safe and effective user interactions.
 
 ## Features
 - **Thread Creation and Replies**: Users can create new threads or reply to existing ones.
