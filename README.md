@@ -18,7 +18,7 @@ This is a fork of https://github.com/ClaireIsAlive/Claire the original is over 9
 
 ## Introduction
 
-This application is an imageboard, inspired by popular community boards where users can post images and messages either as original posts or as replies. It is designed for PHP 8.4.1 and above, incorporating modern PHP standards and security best practices to provide a safe, user-friendly platform for public or private boards.
+This application is an imageboard, (a fork of Claire) where users can post images and messages either as original posts or as replies. It is designed for PHP 8.4.1 and above, incorporating modern PHP standards and security best practices to provide a safe, user-friendly platform for public or private boards.
 
 ## System Requirements
 
