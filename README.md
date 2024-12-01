@@ -4,7 +4,7 @@ Demo at https://4chess.com/claire/
 
 This is a fork of https://github.com/ClaireIsAlive/Claire the original is over 9 years old. AI got good enough where one can feed the whole claire code to it and get it running. Times have changed tho, and some features that shined 9 years ago are no longer viable. In this fork i eliminated over 2/3 of the code base, and added lots of modern security features.
 
-to do- i will make a version using Firebird embeded DB. https://firebirdsql.org  It will be far superior to the sqlite3 version, but the app will support both. 
+to do- i will make a version using Firebird DB. https://firebirdsql.org  It will be far superior to the sqlite3 version, but the app will support both. 
 
 **Version**: PHP 8.4.1 and Above  
 **Author**: [chatgpt]
