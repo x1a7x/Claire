@@ -1,7 +1,7 @@
 # My Imageboard
 
 **Version**: PHP 8.4.1 and Above  
-**Author**: [Your Name]
+**Author**: [chatgpt]
 
 ## Table of Contents
 
