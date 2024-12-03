@@ -1,2 +1,6 @@
 # Claire
-Lightweight PHP imageboard script with SQLite database. Based on TinyIB & TinyIB-mappy code.
+
+
+
+
+i have other versions of claire at https://github.com/x1a7x/imageboards/tree/main/sqlite3 too 
